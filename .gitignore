@@ -1,0 +1,6 @@
+password.txt
+.env
+sample-data
+sample-data/*.csv
+sample-data/*.json
+sample-data/*.xlsx
