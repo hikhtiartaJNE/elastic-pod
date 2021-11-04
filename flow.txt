@@ -1,0 +1,18 @@
+// create certificate for all nodes + kibana (HTTPS)
+docker-compose -f create-certs.yml run --rm create_certs
+
+// generate password
+docker exec node1 /bin/bash -c "bin/elasticsearch-setup-passwords auto --batch --url https://localhost:9200"
+
+// create API KEY 
+index management -> api keys
+
+// load balancing with nginx 
+https://localhost:8080
+
+// kibana
+https://localhost:5601
+
+// Snapshot
+chown elasticsearch:elasticsearch /backup 
+chmod 755 /backup
