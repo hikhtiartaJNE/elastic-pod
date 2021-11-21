@@ -1,0 +1,20 @@
+heartbeat.config.monitors:
+  path: /usr/share/heartbeat/monitors.d/*.yml
+  # If enabled, heartbeat will periodically check the config.monitors path for changes
+  reload.enabled: true
+  # How often to check for changes
+  reload.period: 5s
+
+processors:
+  add_docker_metadata: ~
+
+monitoring.enabled: true
+
+output.elasticsearch:
+  hosts: ["https://node1:9200", "https://node2:9200", "https://node3:9200"]
+  username: "elastic"
+  password: ${BEATS_SYSTEM_PASSWORD}
+  ssl:
+   certificate_authorities: ${CERTS_DIR}/ca/ca.crt   
+
+logging.to_files: false

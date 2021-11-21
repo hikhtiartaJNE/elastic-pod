@@ -1,0 +1,6 @@
+- type: http  
+  id: cs3v2 
+  schedule: '@every 10s'
+  name: "CS3 V2"
+  urls: 
+   - "http://34.101.70.250/cs3_v2/"  
