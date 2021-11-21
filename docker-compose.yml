@@ -11,14 +11,14 @@ services:
       - cluster.initial_master_nodes=node1,node2,node3
       - bootstrap.memory_lock=true
       - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
-      - xpack.license.self_generated.type=trial 
+      - xpack.license.self_generated.type=trial
       - xpack.security.enabled=true
-      - xpack.security.http.ssl.enabled=true 
+      - xpack.security.http.ssl.enabled=true
       - xpack.security.http.ssl.key=$CERTS_DIR/node1/node1.key
       - xpack.security.http.ssl.certificate_authorities=$CERTS_DIR/ca/ca.crt
       - xpack.security.http.ssl.certificate=$CERTS_DIR/node1/node1.crt
-      - xpack.security.transport.ssl.enabled=true 
-      - xpack.security.transport.ssl.verification_mode=certificate 
+      - xpack.security.transport.ssl.enabled=true
+      - xpack.security.transport.ssl.verification_mode=certificate
       - xpack.security.transport.ssl.certificate_authorities=$CERTS_DIR/ca/ca.crt
       - xpack.security.transport.ssl.certificate=$CERTS_DIR/node1/node1.crt
       - xpack.security.transport.ssl.key=$CERTS_DIR/node1/node1.key
@@ -31,12 +31,11 @@ services:
       - data01:/usr/share/elasticsearch/data
       - elastic-backup:/usr/share/elasticsearch/backup
       - certs:$CERTS_DIR
-    # ports:
-    #   - 9201:9200
     networks:
       - elastic
     healthcheck:
-      test: curl --cacert $CERTS_DIR/ca/ca.crt -s https://localhost:9200 >/dev/null; if [[ $$? == 52 ]]; then echo 0; else echo 1; fi
+      test: curl --cacert $CERTS_DIR/ca/ca.crt -s https://localhost:9200 >/dev/null;
+        if [[ $$? == 52 ]]; then echo 0; else echo 1; fi
       interval: 30s
       timeout: 10s
       retries: 5
@@ -70,11 +69,12 @@ services:
     volumes:
       - data02:/usr/share/elasticsearch/data
       - elastic-backup:/usr/share/elasticsearch/backup
-      - certs:$CERTS_DIR    
+      - certs:$CERTS_DIR
     networks:
       - elastic
     healthcheck:
-      test: curl --cacert $CERTS_DIR/ca/ca.crt -s https://localhost:9200 >/dev/null; if [[ $$? == 52 ]]; then echo 0; else echo 1; fi
+      test: curl --cacert $CERTS_DIR/ca/ca.crt -s https://localhost:9200 >/dev/null;
+        if [[ $$? == 52 ]]; then echo 0; else echo 1; fi
       interval: 30s
       timeout: 10s
       retries: 5
@@ -108,11 +108,12 @@ services:
     volumes:
       - data03:/usr/share/elasticsearch/data
       - elastic-backup:/usr/share/elasticsearch/backup
-      - certs:$CERTS_DIR    
+      - certs:$CERTS_DIR
     networks:
       - elastic
     healthcheck:
-      test: curl --cacert $CERTS_DIR/ca/ca.crt -s https://localhost:9200 >/dev/null; if [[ $$? == 52 ]]; then echo 0; else echo 1; fi
+      test: curl --cacert $CERTS_DIR/ca/ca.crt -s https://localhost:9200 >/dev/null;
+        if [[ $$? == 52 ]]; then echo 0; else echo 1; fi
       interval: 30s
       timeout: 10s
       retries: 5
@@ -120,31 +121,77 @@ services:
   kibana:
     image: docker.elastic.co/kibana/kibana:${VERSION}
     container_name: kibana
-    depends_on: {"node1": {"condition": "service_healthy"},"node2": {"condition": "service_healthy"},"node3": {"condition": "service_healthy"}}
+    depends_on:
+      {
+        "node1": { "condition": "service_healthy" },
+        "node2": { "condition": "service_healthy" },
+        "node3": { "condition": "service_healthy" }
+      }
     ports:
       - 5601:5601
     environment:
-      SERVERNAME: localhost      
-      ELASTICSEARCH_HOSTS: '["https://node1:9200","https://node2:9200","https://node3:9200"]'      
-      ELASTICSEARCH_USERNAME: kibana_system
-      ELASTICSEARCH_PASSWORD: ${KIBANA_SYSTEM_PASSWORD}
-      ELASTICSEARCH_SSL_CERTIFICATEAUTHORITIES: $CERTS_DIR/ca/ca.crt
-      SERVER_SSL_ENABLED: "true"
-      SERVER_SSL_KEY: $CERTS_DIR/kibana/kibana.key
-      SERVER_SSL_CERTIFICATE: $CERTS_DIR/kibana/kibana.crt
+      - SERVERNAME=localhost
+      - ELASTICSEARCH_HOSTS=["https://node1:9200","https://node2:9200","https://node3:9200"]
+      - ELASTICSEARCH_USERNAME=kibana_system
+      - ELASTICSEARCH_PASSWORD=$KIBANA_SYSTEM_PASSWORD
+      - ELASTICSEARCH_SSL_CERTIFICATEAUTHORITIES=$CERTS_DIR/ca/ca.crt
+      - SERVER_SSL_ENABLED=true
+      - SERVER_SSL_KEY=$CERTS_DIR/kibana/kibana.key
+      - SERVER_SSL_CERTIFICATE=$CERTS_DIR/kibana/kibana.crt
+    volumes:
+      - ./kibana.yml:/usr/share/kibana/config/kibana.yml
+      - certs:$CERTS_DIR
+    networks:
+      - elastic
+
+  # heartbeat:
+  #   image: docker.elastic.co/beats/heartbeat:${VERSION}
+  #   depends_on:
+  #     {
+  #       "node1": { "condition": "service_healthy" },
+  #       "node2": { "condition": "service_healthy" },
+  #       "node3": { "condition": "service_healthy" }
+  #     }
+  #   environment:
+  #     - BEATS_SYSTEM_PASSWORD=$BEATS_SYSTEM_PASSWORD
+  #     - CERTS_DIR=$CERTS_DIR
+  #   volumes:
+  #     - ./heartbeat/heartbeat.yml:/usr/share/heartbeat/heartbeat.yml
+  #     - ./heartbeat/monitors:/usr/share/heartbeat/monitors.d
+  #     - certs:$CERTS_DIR
+  #   container_name: heartbeat
+  #   networks:
+  #     - elastic
+
+  logstash:
+    image: docker.elastic.co/logstash/logstash:${VERSION}
+    container_name: logstash
+    depends_on:
+      {
+        "node1": { "condition": "service_healthy" },
+        "node2": { "condition": "service_healthy" },
+        "node3": { "condition": "service_healthy" }
+      }
+    environment:
+      - xpack.monitoring.enabled=true
+      - xpack.monitoring.elasticsearch.username=logstash_system
+      - xpack.monitoring.elasticsearch.password=$LOGSTASH_SYSTEM
+      - xpack.monitoring.elasticsearch.hosts=["https://node1:9200","https://node2:9200","https://node3:9200"]
+      - xpack.monitoring.elasticsearch.ssl.certificate_authority=$CERTS_DIR/ca/ca.crt
+      - CERTS_DIR=$CERTS_DIR
     volumes:
       - certs:$CERTS_DIR
     networks:
       - elastic
+
   nginx:
     image: nginx:alpine
     build: ./nginx
-    container_name: load-balancer        
+    container_name: load-balancer
     ports:
       - 8080:443
     networks:
       - elastic
-
 
 volumes:
   data01:
@@ -160,4 +207,5 @@ volumes:
 
 networks:
   elastic:
+    name: elastic-network
     driver: bridge

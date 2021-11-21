@@ -1,0 +1,6 @@
+- type: http  
+  id: jne.co.id 
+  schedule: '@every 5s'
+  name: "jne.co.id"
+  urls: 
+   - "https://www.jne.co.id/id/beranda"  
